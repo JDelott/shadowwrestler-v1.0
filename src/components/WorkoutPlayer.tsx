@@ -1,5 +1,6 @@
 'use client';
 
+import { useEffect } from 'react';
 import { useSequence } from '../context/SequenceContext';
 import { Move } from '../types';
 
@@ -14,6 +15,33 @@ export default function WorkoutPlayer() {
     pauseWorkout,
     resetWorkout
   } = useSequence();
+  
+  // Speak the move name whenever currentMove changes
+  useEffect(() => {
+    // Only speak if we're playing and have a move
+    if (isPlaying && currentMove) {
+      speakMove(currentMove.name);
+    }
+    
+    // Cleanup function
+    return () => {
+      if (window.speechSynthesis) {
+        window.speechSynthesis.cancel();
+      }
+    };
+  }, [currentMove, isPlaying]);
+  
+  // Simple function to speak the move name
+  function speakMove(text: string) {
+    if (!window.speechSynthesis) return;
+    
+    // Cancel any ongoing speech
+    window.speechSynthesis.cancel();
+    
+    // Create utterance with default voice
+    const utterance = new SpeechSynthesisUtterance(text);
+    window.speechSynthesis.speak(utterance);
+  }
   
   // Calculate global workout progress
   const calculateWorkoutProgress = () => {
@@ -76,6 +104,17 @@ export default function WorkoutPlayer() {
             <div className="text-6xl font-bold mb-2">
               {currentMove ? currentMove.name.toUpperCase() : 'READY'}
             </div>
+            {currentMove && (
+              <button 
+                onClick={() => currentMove && speakMove(currentMove.name)}
+                className="mt-2 text-sm text-gray-500 hover:text-black inline-flex items-center"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mr-1">
+                  <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
+                </svg>
+                Speak Move
+              </button>
+            )}
           </div>
           
           <div className="flex justify-center space-x-4">
