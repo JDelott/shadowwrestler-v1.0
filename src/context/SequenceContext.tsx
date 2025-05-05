@@ -35,7 +35,9 @@ export function SequenceProvider({ children }: { children: ReactNode }) {
     { id: 5, name: "Single Leg", duration: 4, selected: false },
     { id: 6, name: "Arm Drag", duration: 3, selected: false },
     { id: 7, name: "Duck Under", duration: 3, selected: false },
-    { id: 8, name: "Penetration Step", duration: 2, selected: false }
+    { id: 8, name: "Penetration Step", duration: 2, selected: false },
+    { id: 9, name: "Post", duration: 2, selected: false },
+    { id: 10, name: "Snap", duration: 2, selected: false }
   ]);
   
   const [savedSequences, setSavedSequences] = useState<Sequence[]>([

@@ -27,7 +27,17 @@ export default function MoveSelector() {
       // Use default duration of 3 seconds
       addCustomMove(customMoveName, 3);
       setCustomMoveName('');
+      
+      // Restore scroll position and reset zoom
+      setTimeout(() => {
+        window.scrollTo(0, window.scrollY);
+      }, 100);
     }
+  };
+  
+  const handleInputBlur = () => {
+    // Force document to scroll back to a sane position
+    window.scrollTo(0, window.scrollY);
   };
   
   // Function to handle workout start/pause with smooth transition
@@ -50,47 +60,47 @@ export default function MoveSelector() {
   return (
     <section className="px-4 py-6 md:py-8">
       <div className="w-full max-w-4xl mx-auto">
-        <div className="flex justify-between items-center mb-6">
-          <h2 className="text-xl md:text-2xl font-bold">Shadow Wrestler</h2>
-          <button 
-            onClick={() => setShowSettings(!showSettings)}
-            className="text-gray-500 hover:text-black p-2 rounded-full hover:bg-gray-100"
-          >
-            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <circle cx="12" cy="12" r="3"></circle>
-              <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
-            </svg>
-          </button>
-        </div>
-        
-        {/* Workout Ready/In Progress Indicator */}
-        {selectedMoves.length > 0 && (
-          <div className="bg-black text-white p-4 rounded-xl mb-6 flex items-center justify-between">
-            <div>
-              <div className="text-xs uppercase tracking-wide opacity-75 mb-1">
-                {isPlaying ? "Workout In Progress" : "Workout Ready"}
+        {/* Combined Header with Play Banner */}
+        <div className={`flex justify-between items-center mb-6 p-4 rounded-xl ${selectedMoves.length > 0 ? 'bg-black text-white' : ''}`}>
+          <div className="flex flex-col">
+            <h2 className="text-xl md:text-2xl font-bold">Shadow Wrestler</h2>
+            {selectedMoves.length > 0 && (
+              <div className="text-sm opacity-90 mt-1">
+                {selectedMoves.length} moves · {workoutDuration} min
               </div>
-              <div className="font-medium">{selectedMoves.length} moves · {workoutDuration} min</div>
-            </div>
+            )}
+          </div>
+          
+          <div className="flex items-center space-x-3">
+            {selectedMoves.length > 0 && (
+              <button 
+                onClick={handleWorkoutControl}
+                className="bg-white text-black h-10 w-10 rounded-full flex items-center justify-center hover:bg-gray-100 transition-colors"
+              >
+                {isPlaying ? (
+                  <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <rect x="6" y="4" width="4" height="16"></rect>
+                    <rect x="14" y="4" width="4" height="16"></rect>
+                  </svg>
+                ) : (
+                  <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <polygon points="5 3 19 12 5 21 5 3"></polygon>
+                  </svg>
+                )}
+              </button>
+            )}
+            
             <button 
-              onClick={handleWorkoutControl}
-              className="bg-white text-black h-12 w-12 rounded-full flex items-center justify-center hover:bg-gray-100 transition-colors"
+              onClick={() => setShowSettings(!showSettings)}
+              className={`p-2 rounded-full hover:bg-gray-100 ${selectedMoves.length > 0 ? 'text-white hover:text-black' : 'text-gray-500 hover:text-black'}`}
             >
-              {isPlaying ? (
-                // Pause icon when workout is playing
-                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <rect x="6" y="4" width="4" height="16"></rect>
-                  <rect x="14" y="4" width="4" height="16"></rect>
-                </svg>
-              ) : (
-                // Play icon when workout is not playing
-                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <polygon points="5 3 19 12 5 21 5 3"></polygon>
-                </svg>
-              )}
+              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <circle cx="12" cy="12" r="3"></circle>
+                <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+              </svg>
             </button>
           </div>
-        )}
+        </div>
         
         {/* Settings Panel */}
         {showSettings && (
@@ -180,27 +190,6 @@ export default function MoveSelector() {
                   </button>
                 </div>
               )}
-              
-              {/* Custom Move Creator (Mobile Layout) */}
-              <div className="mt-6 pt-6 border-t border-gray-100 md:hidden">
-                <h3 className="font-bold text-sm mb-3">Add Custom Move</h3>
-                <div className="space-y-3">
-                  <input 
-                    type="text" 
-                    placeholder="Enter move name" 
-                    className="w-full border border-gray-200 p-2 text-sm rounded"
-                    value={customMoveName}
-                    onChange={(e) => setCustomMoveName(e.target.value)}
-                  />
-                  <button 
-                    onClick={handleAddCustomMove}
-                    className="bg-black text-white p-2 text-sm w-full rounded"
-                    disabled={!customMoveName.trim()}
-                  >
-                    Add Custom Move
-                  </button>
-                </div>
-              </div>
             </div>
           </div>
           
@@ -225,30 +214,33 @@ export default function MoveSelector() {
                 ))}
               </div>
             </div>
-            
-            {/* Add Custom Move Section (Desktop Layout) */}
-            <div className="bg-white rounded-xl shadow-sm p-4 md:p-6 mb-6 hidden md:block">
-              <h3 className="font-bold text-sm md:text-base mb-4">Add Custom Move</h3>
-              <div className="md:flex md:space-x-4 md:items-end">
-                <div className="flex-1 mb-3 md:mb-0">
-                  <label className="block text-xs text-gray-500 mb-1">Move Name</label>
-                  <input 
-                    type="text" 
-                    placeholder="Enter move name" 
-                    className="w-full border border-gray-200 p-2 text-sm rounded"
-                    value={customMoveName}
-                    onChange={(e) => setCustomMoveName(e.target.value)}
-                  />
-                </div>
-                <button 
-                  onClick={handleAddCustomMove}
-                  className="bg-black text-white p-2 text-sm w-full md:w-auto md:px-4 rounded"
-                  disabled={!customMoveName.trim()}
-                >
-                  Add Custom Move
-                </button>
-              </div>
+          </div>
+        </div>
+        
+        {/* Add Custom Move Section (Placed below move selection containers) */}
+        <div className="bg-white rounded-xl shadow-sm p-4 md:p-6 mt-6">
+          <h3 className="font-bold text-sm md:text-base mb-4">Add Custom Move</h3>
+          <div className="md:flex md:space-x-4 md:items-end">
+            <div className="flex-1 mb-3 md:mb-0">
+              <label className="block text-xs text-gray-500 mb-1">Move Name</label>
+              <input 
+                type="text" 
+                placeholder="Enter move name" 
+                className="w-full border border-gray-200 p-2 text-sm rounded"
+                value={customMoveName}
+                onChange={(e) => setCustomMoveName(e.target.value)}
+                onBlur={handleInputBlur}
+                autoComplete="off"
+                style={{ fontSize: '16px' }}
+              />
             </div>
+            <button 
+              onClick={handleAddCustomMove}
+              className="bg-black text-white p-2 text-sm w-full md:w-auto md:px-4 rounded"
+              disabled={!customMoveName.trim()}
+            >
+              Add Custom Move
+            </button>
           </div>
         </div>
       </div>
