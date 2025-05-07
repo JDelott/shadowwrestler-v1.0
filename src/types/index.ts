@@ -3,6 +3,7 @@ export interface Move {
   name: string;
   duration: number;
   selected?: boolean;
+  quantity?: number | "auto";
 }
 
 export interface Sequence {

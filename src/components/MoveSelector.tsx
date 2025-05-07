@@ -16,7 +16,9 @@ export default function MoveSelector() {
     addCustomMove,
     startWorkout,
     pauseWorkout,
-    isPlaying
+    isPlaying,
+    updateMoveQuantity,
+    getMoveCompletedCount
   } = useSequence();
   
   const [customMoveName, setCustomMoveName] = useState('');
@@ -107,112 +109,140 @@ export default function MoveSelector() {
           <div className="bg-white rounded-xl shadow-sm p-4 md:p-6 mb-6">
             <h3 className="font-bold text-sm md:text-base mb-4">Workout Settings</h3>
             
-            <div className="space-y-6 md:grid md:grid-cols-2 md:gap-6 md:space-y-0">
-              <div>
-                <label className="block text-sm text-gray-600 mb-2">Workout Duration</label>
-                <div className="flex items-center">
-                  <input 
-                    type="range" 
-                    min="1"
-                    max="30"
-                    value={workoutDuration}
-                    onChange={(e) => setWorkoutDuration(parseInt(e.target.value))}
-                    className="flex-1 mr-3"
-                  />
-                  <span className="text-sm w-16 text-right font-medium">{workoutDuration} min</span>
+            <div className="space-y-6">
+              <div className="md:grid md:grid-cols-2 md:gap-6 md:space-y-0 space-y-6">
+                <div>
+                  <label className="block text-sm text-gray-600 mb-2">Workout Duration</label>
+                  <div className="flex items-center">
+                    <input 
+                      type="range" 
+                      min="1"
+                      max="30"
+                      value={workoutDuration}
+                      onChange={(e) => setWorkoutDuration(parseInt(e.target.value))}
+                      className="flex-1 mr-3"
+                    />
+                    <span className="text-sm w-16 text-right font-medium">{workoutDuration} min</span>
+                  </div>
+                </div>
+                
+                <div>
+                  <label className="block text-sm text-gray-600 mb-2">Move Speed</label>
+                  <div className="flex items-center">
+                    <input 
+                      type="range" 
+                      min="0.5" 
+                      max="2" 
+                      step="0.1" 
+                      value={playbackSpeed}
+                      onChange={(e) => setPlaybackSpeed(parseFloat(e.target.value))}
+                      className="flex-1 mr-3"
+                    />
+                    <span className="text-sm w-16 text-right font-medium">{playbackSpeed}x</span>
+                  </div>
                 </div>
               </div>
               
-              <div>
-                <label className="block text-sm text-gray-600 mb-2">Move Speed</label>
-                <div className="flex items-center">
-                  <input 
-                    type="range" 
-                    min="0.5" 
-                    max="2" 
-                    step="0.1" 
-                    value={playbackSpeed}
-                    onChange={(e) => setPlaybackSpeed(parseFloat(e.target.value))}
-                    className="flex-1 mr-3"
-                  />
-                  <span className="text-sm w-16 text-right font-medium">{playbackSpeed}x</span>
+              {/* Selected Moves - Now in settings panel with quantity input */}
+              <div className="pt-4 border-t border-gray-100">
+                <div className="flex justify-between items-center mb-4">
+                  <h3 className="font-bold text-sm md:text-base">Selected Moves</h3>
+                  <div className="flex items-center gap-2">
+                    <div className="text-xs text-gray-500">
+                      {selectedMoves.length} {selectedMoves.length === 1 ? 'move' : 'moves'} selected
+                    </div>
+                    {selectedMoves.length > 0 && (
+                      <button 
+                        onClick={clearSelectedMoves}
+                        className="text-xs text-gray-500 hover:text-black"
+                      >
+                        Clear All
+                      </button>
+                    )}
+                  </div>
                 </div>
+                
+                {selectedMoves.length === 0 ? (
+                  <div className="text-center py-4 text-gray-500 text-sm flex items-center justify-center">
+                    <p>Select moves to build your workout</p>
+                  </div>
+                ) : (
+                  <div className="max-h-48 overflow-y-auto">
+                    <div className="space-y-2">
+                      {selectedMoves.map((move) => (
+                        <div key={move.id} className="flex items-center justify-between bg-gray-50 p-3 rounded">
+                          <div className="font-medium">{move.name}</div>
+                          <div className="flex items-center space-x-2">
+                            <div className="flex items-center gap-1">
+                              <label className="text-xs text-gray-600">Goal:</label>
+                              <input
+                                type="text"
+                                value={move.quantity === "auto" ? "Auto" : move.quantity?.toString() || "Auto"}
+                                onChange={(e) => {
+                                  const value = e.target.value.trim();
+                                  if (value.toLowerCase() === "auto" || value === "") {
+                                    updateMoveQuantity(move.id, "auto");
+                                  } else {
+                                    const numValue = parseInt(value);
+                                    if (!isNaN(numValue) && numValue > 0) {
+                                      updateMoveQuantity(move.id, numValue);
+                                    }
+                                  }
+                                }}
+                                className="w-14 h-7 text-xs text-center border border-gray-200 rounded"
+                                onBlur={(e) => {
+                                  if (e.target.value.trim() === "") {
+                                    updateMoveQuantity(move.id, "auto");
+                                  }
+                                }}
+                              />
+                              {typeof move.quantity === 'number' && (
+                                <span className="text-xs text-gray-500">
+                                  {getMoveCompletedCount(move.id)}/{move.quantity}
+                                </span>
+                              )}
+                            </div>
+                            <button 
+                              onClick={() => toggleMoveSelection(move.id)}
+                              className="text-gray-400 hover:text-black"
+                            >
+                              <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                <circle cx="12" cy="12" r="10"></circle>
+                                <line x1="15" y1="9" x2="9" y2="15"></line>
+                                <line x1="9" y1="9" x2="15" y2="15"></line>
+                              </svg>
+                            </button>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
           </div>
         )}
         
-        {/* Main Content Grid */}
-        <div className="md:grid md:grid-cols-3 md:gap-6">
-          {/* Left Column - Selected Moves */}
-          <div className="md:col-span-1 mb-6 md:mb-0">
-            <div className="bg-white rounded-xl shadow-sm p-4 md:p-6">
-              <div className="flex justify-between items-center mb-4">
-                <h3 className="font-bold text-sm md:text-base">Selected Moves</h3>
-                <div className="text-xs text-gray-500">
-                  {selectedMoves.length} {selectedMoves.length === 1 ? 'move' : 'moves'} selected
-                </div>
-              </div>
-              
-              {selectedMoves.length === 0 ? (
-                <div className="text-center py-6 text-gray-500 text-sm h-48 flex items-center justify-center">
-                  <p>Select moves to build your workout</p>
-                </div>
-              ) : (
-                <div className="h-48 overflow-y-auto mb-4">
-                  <div className="space-y-2">
-                    {selectedMoves.map((move) => (
-                      <div key={move.id} className="flex items-center justify-between bg-gray-50 p-3 rounded">
-                        <div className="font-medium">{move.name}</div>
-                        <button 
-                          onClick={() => toggleMoveSelection(move.id)}
-                          className="text-gray-400 hover:text-black"
-                        >
-                          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                            <circle cx="12" cy="12" r="10"></circle>
-                            <line x1="15" y1="9" x2="9" y2="15"></line>
-                            <line x1="9" y1="9" x2="15" y2="15"></line>
-                          </svg>
-                        </button>
-                      </div>
-                    ))}
+        {/* Main Content Grid - Now without Selected Moves section */}
+        <div>
+          {/* Available Moves */}
+          <div className="bg-white rounded-xl shadow-sm p-4 md:p-6 mb-6">
+            <h3 className="font-bold text-sm md:text-base mb-4">Available Moves</h3>
+            <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+              {availableMoves.map((move) => (
+                <button 
+                  key={move.id}
+                  onClick={() => toggleMoveSelection(move.id)}
+                  className={`border rounded p-3 text-left transition-colors ${
+                    move.selected ? 'border-black bg-gray-50' : 'border-gray-200'
+                  }`}
+                >
+                  <div className="flex justify-between">
+                    <span className="font-medium">{move.name}</span>
+                    {move.selected && <span>✓</span>}
                   </div>
-                </div>
-              )}
-              
-              {selectedMoves.length > 0 && (
-                <div className="flex justify-between">
-                  <button 
-                    onClick={clearSelectedMoves}
-                    className="text-xs text-gray-500 hover:text-black"
-                  >
-                    Clear All
-                  </button>
-                </div>
-              )}
-            </div>
-          </div>
-          
-          {/* Right Column - Available Moves */}
-          <div className="md:col-span-2">
-            <div className="bg-white rounded-xl shadow-sm p-4 md:p-6 mb-6">
-              <h3 className="font-bold text-sm md:text-base mb-4">Available Moves</h3>
-              <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-                {availableMoves.map((move) => (
-                  <button 
-                    key={move.id}
-                    onClick={() => toggleMoveSelection(move.id)}
-                    className={`border rounded p-3 text-left transition-colors ${
-                      move.selected ? 'border-black bg-gray-50' : 'border-gray-200'
-                    }`}
-                  >
-                    <div className="flex justify-between">
-                      <span className="font-medium">{move.name}</span>
-                      {move.selected && <span>✓</span>}
-                    </div>
-                  </button>
-                ))}
-              </div>
+                </button>
+              ))}
             </div>
           </div>
         </div>
