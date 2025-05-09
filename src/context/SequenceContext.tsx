@@ -98,18 +98,10 @@ export function SequenceProvider({ children }: { children: ReactNode }) {
     
     return selectedMoves[randomIndex];
   }
-  
-  // Track the active timeout to prevent race conditions
-  const timeoutActiveRef = useRef<boolean>(false);
-  
   // Handle move changes
   useEffect(() => {
     // Only proceed if we're playing and have a current move
     if (!isPlaying || !currentMove) return;
-    
-    // Prevent re-entry if we're already setting up a timeout
-    if (timeoutActiveRef.current) return;
-    timeoutActiveRef.current = true;
     
     console.log(`Setting up timer for ${currentMove.name} - ${currentMove.duration / playbackSpeed}s`);
     
@@ -127,32 +119,16 @@ export function SequenceProvider({ children }: { children: ReactNode }) {
       console.log(`Time's up for ${currentMove.name}`);
       
       // Update completion count for the current move
-      setMoveCompletionCounts(prev => {
-        const newCounts = {
-          ...prev,
-          [currentMove.id]: (prev[currentMove.id] || 0) + 1
-        };
-        
-        // Log current completion towards goals
-        const currentCount = newCounts[currentMove.id];
-        const targetCount = typeof currentMove.quantity === 'number' ? currentMove.quantity : 'auto';
-        console.log(`${currentMove.name}: ${currentCount}/${targetCount}`);
-        
-        return newCounts;
-      });
+      setMoveCompletionCounts(prev => ({
+        ...prev,
+        [currentMove.id]: (prev[currentMove.id] || 0) + 1
+      }));
       
-      // Get the next move
+      // Simply pick the next random move, no conditions
       const nextMove = getRandomMove();
-      
-      // Mark timeout as inactive before setting any state
-      timeoutActiveRef.current = false;
-      
       if (nextMove) {
         console.log(`Next move: ${nextMove.name}`);
         setCurrentMove(nextMove);
-      } else {
-        console.log("No moves available, stopping workout");
-        setIsPlaying(false);
       }
     }, duration);
     
@@ -162,11 +138,10 @@ export function SequenceProvider({ children }: { children: ReactNode }) {
         clearTimeout(intervalIdRef.current);
         intervalIdRef.current = null;
       }
-      timeoutActiveRef.current = false;
     };
   }, [currentMove, isPlaying, playbackSpeed]);
   
-  // Global workout timer
+  // Global workout timer - This is the only place that should stop the workout
   useEffect(() => {
     if (!isPlaying) return;
     
@@ -177,7 +152,7 @@ export function SequenceProvider({ children }: { children: ReactNode }) {
         console.log("Initial move:", move.name);
         setCurrentMove(move);
       } else {
-        // No valid moves, pause workout
+        // No moves selected, can't start
         setIsPlaying(false);
       }
     }
@@ -187,11 +162,20 @@ export function SequenceProvider({ children }: { children: ReactNode }) {
       setElapsedTime(prev => {
         const newTime = prev + 1;
         
-        // Check if workout duration has been reached
+        // Check if workout duration has been reached - ONLY place that should stop the workout
         if (newTime >= workoutDuration * 60) {
-          console.log("Workout complete");
+          console.log("Workout complete - time limit reached");
+          
+          // Stop the workout
           setIsPlaying(false);
           setCurrentMove(null);
+          
+          // Clean up the interval for the move
+          if (intervalIdRef.current) {
+            clearTimeout(intervalIdRef.current);
+            intervalIdRef.current = null;
+          }
+          
           return 0;
         }
         
@@ -201,7 +185,7 @@ export function SequenceProvider({ children }: { children: ReactNode }) {
     
     // Cleanup
     return () => clearInterval(timerId);
-  }, [isPlaying, selectedMoves, workoutDuration, currentMove]);
+  }, [isPlaying, selectedMoves, workoutDuration]);
   
   const toggleMoveSelection = (moveId: number) => {
     setAvailableMoves(moves => 
