@@ -171,40 +171,84 @@ export default function MoveSelector() {
                     <div className="space-y-2">
                       {selectedMoves.map((move) => (
                         <div key={move.id} className="flex items-center justify-between bg-gray-50 p-3 rounded">
-                          <div className="font-medium">{move.name}</div>
+                          <div className="font-medium truncate mr-2">{move.name}</div>
                           <div className="flex items-center space-x-2">
-                            <div className="flex items-center gap-1">
-                              <label className="text-xs text-gray-600">Goal:</label>
-                              <input
-                                type="text"
-                                value={move.quantity === "auto" ? "Auto" : move.quantity?.toString() || "Auto"}
-                                onChange={(e) => {
-                                  const value = e.target.value.trim();
-                                  if (value.toLowerCase() === "auto" || value === "") {
-                                    updateMoveQuantity(move.id, "auto");
-                                  } else {
-                                    const numValue = parseInt(value);
-                                    if (!isNaN(numValue) && numValue > 0) {
-                                      updateMoveQuantity(move.id, numValue);
-                                    }
-                                  }
-                                }}
-                                className="w-14 h-7 text-xs text-center border border-gray-200 rounded"
-                                onBlur={(e) => {
-                                  if (e.target.value.trim() === "") {
-                                    updateMoveQuantity(move.id, "auto");
-                                  }
-                                }}
-                              />
-                              {typeof move.quantity === 'number' && (
-                                <span className="text-xs text-gray-500">
-                                  {getMoveCompletedCount(move.id)}/{move.quantity}
+                            {/* Fixed-width container for the entire goal section */}
+                            <div className="flex items-center w-36"> 
+                              {/* Fixed-width label */}
+                              <span className="text-xs text-gray-600 w-8">Goal:</span>
+                              
+                              {/* Fixed-width control container */}
+                              <div className="flex border border-gray-200 rounded h-7 overflow-hidden w-20">
+                                {/* Auto/Number toggle */}
+                                <button
+                                  onClick={() => updateMoveQuantity(move.id, move.quantity === "auto" ? 1 : "auto")}
+                                  className={`w-10 h-full text-xs border-r border-gray-200 flex items-center justify-center ${
+                                    move.quantity === "auto" ? "bg-gray-100 text-black" : "text-gray-400"
+                                  }`}
+                                >
+                                  Auto
+                                </button>
+                                
+                                {/* Number input - simpler version */}
+                                <div className="w-10">
+                                  <input
+                                    type="text"
+                                    inputMode="numeric"
+                                    disabled={move.quantity === "auto"}
+                                    value={move.quantity === "auto" ? "" : move.quantity?.toString() || ""}
+                                    onFocus={(e) => {
+                                      // Clear the input when focused for easier entry
+                                      if (move.quantity !== "auto") {
+                                        e.target.value = "";
+                                      }
+                                    }}
+                                    onChange={(e) => {
+                                      const value = e.target.value.trim();
+                                      
+                                      // Allow empty input while typing
+                                      if (value === "") return;
+                                      
+                                      // Only update if it's a valid number
+                                      const numValue = parseInt(value);
+                                      if (!isNaN(numValue) && numValue >= 1 && numValue <= 999) {
+                                        updateMoveQuantity(move.id, numValue);
+                                      }
+                                    }}
+                                    onBlur={(e) => {
+                                      // When input loses focus, ensure there's a valid value
+                                      const value = e.target.value.trim();
+                                      
+                                      if (value === "" || isNaN(parseInt(value))) {
+                                        // If empty or invalid on blur, set to 1
+                                        updateMoveQuantity(move.id, 1);
+                                      }
+                                    }}
+                                    className={`w-full h-full text-xs text-center border-0 ${
+                                      move.quantity === "auto" ? "bg-gray-50 text-gray-400" : "bg-white"
+                                    }`}
+                                    maxLength={3} // Simple way to limit to 3 digits
+                                  />
+                                </div>
+                              </div>
+                              
+                              {/* Fixed-width counter - now always visible with appropriate format */}
+                              <div className="w-8 text-right">
+                                <span className="text-xs text-gray-500 ml-1">
+                                  {move.quantity === "auto" ? (
+                                    // For auto: just show the count
+                                    getMoveCompletedCount(move.id)
+                                  ) : (
+                                    // For numeric goals: show count/total format
+                                    `${getMoveCompletedCount(move.id)}/${move.quantity}`
+                                  )}
                                 </span>
-                              )}
+                              </div>
                             </div>
+                            
                             <button 
                               onClick={() => toggleMoveSelection(move.id)}
-                              className="text-gray-400 hover:text-black"
+                              className="text-gray-400 hover:text-black flex-shrink-0"
                             >
                               <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                                 <circle cx="12" cy="12" r="10"></circle>
